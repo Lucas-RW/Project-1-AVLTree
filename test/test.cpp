@@ -1,53 +1,94 @@
-#include <catch2/catch_test_macros.hpp>
-#include <iostream>
-
-// uncomment and replace the following with your own headers
-// #include "AVL.h"
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
+#include "AVLTree.h"
 
 using namespace std;
 
-// the syntax for defining a test is below. It is important for the name to be unique, but you can group multiple tests with [tags]. A test can have [multiple][tags] using that syntax.
-TEST_CASE("Example Test Name - Change me!", "[flag]"){
-	// instantiate any class members that you need to test here
-	int one = 1;
+// Checking for invalid commands
 
-	// anything that evaluates to false in a REQUIRE block will result in a failing test 
-	REQUIRE(one == 0); // fix me!
+TEST_CASE("Invalid commands", "[commands]") {
+    AVLTree tree;
 
-	// all REQUIRE blocks must evaluate to true for the whole test to pass
-	REQUIRE(false); // also fix me!
+    REQUIRE_THROWS(tree.processCommand("insert A11y 45679999"));  // invalid key
+    REQUIRE_THROWS(tree.processCommand("remove"));               // missing args
+    REQUIRE_THROWS(tree.processCommand("search "));                 // empty argument
+    REQUIRE_THROWS(tree.processCommand("insert 123abc"));         // missing value
+    REQUIRE_THROWS(tree.processCommand("invalid command"));      // totally invalid
 }
 
-TEST_CASE("Test 2", "[flag]"){
-	// you can also use "sections" to share setup code between tests, for example:
-	int one = 1;
+// Insert + rotation cases
 
-	SECTION("num is 2") {
-		int num = one + 1;
-		REQUIRE(num == 2);
-	};
+TEST_CASE("Right Rotation (LL Case)", "[rotations]") {
+    AVLTree tree;
+    tree.insert("A", 30);
+    tree.insert("B", 20);
+    tree.insert("C", 10);
 
-	SECTION("num is 3") {
-		int num = one + 2;
-		REQUIRE(num == 3);
-	};
-
-	// each section runs the setup code independently to ensure that they don't affect each other
+    Node* root = tree.getRoot();
+    REQUIRE(root->student.id == 20);    
+    REQUIRE(root->left->student.id == 10); 
+    REQUIRE(root->right->student.id == 30);
 }
 
-// you must write 5 unique, meaningful tests for credit on the testing portion of this project!
+TEST_CASE("Left Rotation (RR Case)", "[rotations]") {
+    AVLTree tree;
+    tree.insert("A", 10);
+    tree.insert("B", 20);
+    tree.insert("C", 30); 
 
-// the provided test from the template is below.
+    Node* root = tree.getRoot();
+    REQUIRE(root->student.id == 20);      
+    REQUIRE(root->left->student.id == 10);
+    REQUIRE(root->right->student.id == 30);
+}
 
-TEST_CASE("Example BST Insert", "[flag]"){
-	/*
-		MyAVLTree tree;   // Create a Tree object
-		tree.insert(3);
-		tree.insert(2);
-		tree.insert(1);
-		std::vector<int> actualOutput = tree.inorder();
-		std::vector<int> expectedOutput = {1, 2, 3};
-		REQUIRE(expectedOutput.size() == actualOutput.size());
-		REQUIRE(actualOutput == expectedOutput);
-	*/
+TEST_CASE("Left-Right Rotation (LR Case)", "[rotations]") {
+    AVLTree tree;
+    tree.insert("A", 30);
+    tree.insert("B", 10);
+    tree.insert("C", 20); 
+
+    Node* root = tree.getRoot();
+    REQUIRE(root->student.id == 20);       
+    REQUIRE(root->left->student.id == 10);
+    REQUIRE(root->right->student.id == 30);
+}
+
+TEST_CASE("Right-Left Rotation (RL Case)", "[rotations]") {
+    AVLTree tree;
+    tree.insert("A", 10);
+    tree.insert("B", 30);
+    tree.insert("C", 20); 
+
+    Node* root = tree.getRoot();
+    REQUIRE(root->student.id == 20);
+    REQUIRE(root->left->student.id == 10);
+    REQUIRE(root->right->student.id == 30);
+}
+
+
+// Insert 100, delete 10 random, verify
+
+TEST_CASE("Bulk insert and delete", "[bulk]") {
+    AVLTree tree;
+
+    // Insert 100 nodes
+    for (int i = 1; i <= 100; i++) {
+        tree.insert(i);
+    }
+    REQUIRE(tree.size() == 100); // Will implement helper function later to have a size method
+
+    // Delete 10 random nodes
+    int toDelete[10] = {5, 12, 33, 47, 58, 69, 75, 82, 91, 100};
+    for (int x : toDelete) {
+        tree.remove(x);
+    }
+    REQUIRE(tree.size() == 90);
+
+    // Verify in-order traversal has 90 sorted elements
+    vector<int> inorder = tree.inorderTraversal();
+    REQUIRE(inorder.size() == 90);
+    for (size_t i = 1; i < inorder.size(); i++) {
+        REQUIRE(inorder[i-1] < inorder[i]); // strictly increasing
+    }
 }
